@@ -1,15 +1,33 @@
 from rest_framework import viewsets, permissions, filters 
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework import status
-from .models import Product, Category
-from .serializers import ProductSerializer, CategorySerializer
+from .models import Product, Category, Recipe, AboutVideo
+from .serializers import ProductSerializer, CategorySerializer, RecipeSerializer, AboutVideoSerializer
+from django.shortcuts import render, get_object_or_404
+from django.http import StreamingHttpResponse, HttpResponse, FileResponse
+import os
+import mimetypes
 
 class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+
+
+class RecipeViewSet(viewsets.ModelViewSet):
+    queryset = Recipe.objects.all().order_by('-created_at')
+    serializer_class = RecipeSerializer
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+
+class AboutVideoViewSet(viewsets.ModelViewSet):
+    queryset = AboutVideo.objects.all().order_by('-created_at')
+    serializer_class = AboutVideoSerializer
+    permission_classes = [permissions.AllowAny]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
 
 class ProductViewSet(viewsets.ModelViewSet):
     queryset = Product.objects.filter(is_active=True).order_by('-created_at')
@@ -45,6 +63,61 @@ def products_by_category_name(request, category_name):
     except Category.DoesNotExist:
         return Response({'detail': 'Category not found'}, status=status.HTTP_404_NOT_FOUND)
 
+# --- Video streaming with HTTP Range support ---
+def stream_about_video(request, pk: int):
+    video_obj = get_object_or_404(AboutVideo, pk=pk)
+    if not video_obj.video:
+        return HttpResponse(status=404)
+
+    file_path = video_obj.video.path
+    file_size = os.path.getsize(file_path)
+    content_type, _ = mimetypes.guess_type(file_path)
+    content_type = content_type or 'application/octet-stream'
+
+    range_header = request.headers.get('Range') or request.META.get('HTTP_RANGE', '')
+    if range_header:
+        # Example: 'bytes=0-1023'
+        bytes_unit, bytes_range = range_header.split('=')
+        start_str, end_str = bytes_range.split('-')
+        try:
+            start = int(start_str) if start_str else 0
+        except ValueError:
+            start = 0
+        try:
+            end = int(end_str) if end_str else file_size - 1
+        except ValueError:
+            end = file_size - 1
+        end = min(end, file_size - 1)
+        length = end - start + 1
+
+        def file_iterator(path, offset, length, chunk_size=8192):
+            with open(path, 'rb') as f:
+                f.seek(offset)
+                remaining = length
+                while remaining > 0:
+                    chunk = f.read(min(chunk_size, remaining))
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                    yield chunk
+
+        resp = StreamingHttpResponse(
+            file_iterator(file_path, start, length),
+            status=206,
+            content_type=content_type,
+        )
+        resp['Content-Range'] = f'bytes {start}-{end}/{file_size}'
+        resp['Accept-Ranges'] = 'bytes'
+        resp['Content-Length'] = str(length)
+        return resp
+    else:
+        # Full file response
+        resp = FileResponse(open(file_path, 'rb'), content_type=content_type)
+        resp['Content-Length'] = str(file_size)
+        resp['Accept-Ranges'] = 'bytes'
+        return resp
+
+
 
 
 
@@ -57,6 +130,7 @@ from .serializers import EmailSerializer, OTPVerifySerializer, RegisterSerialize
 from .utils import generate_otp, send_otp_email
 
 @api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def send_otp(request):
     serializer = EmailSerializer(data=request.data)
     if serializer.is_valid():
@@ -68,6 +142,7 @@ def send_otp(request):
     return Response(serializer.errors, status=400)
 
 @api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def verify_otp(request):
     serializer = OTPVerifySerializer(data=request.data)
     if serializer.is_valid():
@@ -83,6 +158,7 @@ def verify_otp(request):
     return Response(serializer.errors, status=400)
 
 @api_view(['POST'])
+@permission_classes([permissions.AllowAny])
 def register_user(request):
     serializer = RegisterSerializer(data=request.data)
     if serializer.is_valid():
@@ -309,8 +385,6 @@ def user_count(request):
         'active_users': active_users
     })
 
-
-from django.shortcuts import render
 
 def dojo_app(request):
     return render (request,'index.html')

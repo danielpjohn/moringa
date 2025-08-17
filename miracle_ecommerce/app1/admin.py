@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Category, Product, EmailOTP, Cart, CartItem
+from .models import Category, Product, EmailOTP, Cart, CartItem, Recipe, AboutVideo
 
 # Inline CartItems in Cart admin
 class CartItemInline(admin.TabularInline):
@@ -47,3 +47,15 @@ class CartItemAdmin(admin.ModelAdmin):
 from .models import ImageUpload
 
 admin.site.register(ImageUpload)
+
+# Recipe admin
+@admin.register(Recipe)
+class RecipeAdmin(admin.ModelAdmin):
+    list_display = ['title', 'created_at', 'updated_at']
+    search_fields = ['title', 'benefits']
+
+# AboutVideo admin
+@admin.register(AboutVideo)
+class AboutVideoAdmin(admin.ModelAdmin):
+    list_display = ['title', 'youtube_id', 'created_at', 'updated_at']
+    search_fields = ['title', 'description', 'youtube_id']

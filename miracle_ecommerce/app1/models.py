@@ -76,6 +76,34 @@ class CartItem(models.Model):
 from django.db import models
 
 class ImageUpload(models.Model):
-    image = models.ImageField(upload_to='image/')  # Saves to media/image/
+    image = models.ImageField(upload_to='image/')  
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+
+# Recipe model
+class Recipe(models.Model):
+    title = models.CharField(max_length=255)
+    image = models.ImageField(upload_to='recipes/', blank=True, null=True)
+    ingredients = models.JSONField(default=list, blank=True)
+    instructions = models.JSONField(default=list, blank=True)
+    benefits = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title
+
+
+# Video to display on About page
+class AboutVideo(models.Model):
+    title = models.CharField(max_length=255,blank=True, null=True)
+    description = models.TextField(blank=True, default='', null=True)
+    # Either upload a video file or provide a YouTube ID
+    video = models.FileField(upload_to='videos/', blank=True, null=True)
+    youtube_id = models.CharField(max_length=64, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return self.title or self.youtube_id or f"AboutVideo {self.pk or ''}"
 

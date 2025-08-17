@@ -1,25 +1,28 @@
 import { BrowserRouter as Router, Routes, Route, useLocation } from "react-router-dom";
-import Home from "./features/Home/home";
-import ViewAllProducts from "./features/AllProducts/AllProduct";
-import Checkout from "./features/Checkout/checkout";
-import Login from "./features/Login/login";
-import AdminLayout from "./features/Admin/admin";
-import UserPage from "./features/Admin/userDetails/UserPage";
-import AddCouponPage from "./features/Admin/addCoupon/coupon";
-import AddProductPage from "./features/Admin/addProduct/addProduct";
-import AddCategoryForm from "./features/Admin/addCategory/addcategory";
-import Register from "./features/Login/register";
-import ProtectedRoute from './ProtectedRoute';
-import { AuthProvider } from "./features/Login/AuthContext";
-import AdminProtectedRoute from './AdminProtectedRoute';
+import { 
+  Home, 
+  Checkout, 
+  Login, 
+  AdminDashboard, 
+  UserPage, 
+  AddCoupon, 
+  AddProduct, 
+  AddCategory, 
+  Register,
+  Cart,
+  AboutPage,
+  LearnMore,
+  RecipeGallery,
+  Products
+} from "./components/organisms";
+import ContactForm from "./components/organisms/Contact/contact";
+import { AuthProvider } from "./components/organisms/Login/AuthContext";
+// import ProtectedRoute from "./routes/ProtectedRoute";
+import AdminProtectedRoute from "./routes/AdminProtectedRoute";
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Cart from "./features/Products/cart";
-import About from "./features/About/about";
-import LearnMore from "./features/WhyMoringa/LearnMore";
 import { useEffect } from "react";
-import MoringaRecipes from "./features/MoringaRecipes/MoringaRecipes";
-import Product from "./features/Products/Product";
+import AddRecipePage from "./components/organisms/Admin/addRecipe/addrecipe";
 
 // Scroll to top on route change
 function ScrollToTop() {
@@ -42,25 +45,26 @@ function App() {
           <Route path="/register" element={<Register />} />
           <Route path="/" element={<Home />} />
           <Route path="/home" element={<Home />} />
-
-          {/* Protected user routes */}
-          {/* <Route element={<ProtectedRoute />}> */}
+          <Route path="/products" element={<Products />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<Checkout />} />
-          <Route path="/products" element={<Product />} />
-          <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<ContactForm />} />
+          {/* Protected user routes */}
+          {/* <Route element={<ProtectedRoute />}> */}
+          <Route path="/about" element={<AboutPage />} />
           <Route path="/learnmore" element={<LearnMore />} />
-          <Route path="/recipe" element={<MoringaRecipes />} />
+          <Route path="/recipe" element={<RecipeGallery />} />
           {/* </Route> */}
 
           {/* Protected admin routes */}
-          {/* <Route element={<AdminProtectedRoute />}> */}
-            <Route path="/admin" element={<AdminLayout />} />
+          <Route element={<AdminProtectedRoute />}>
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/user" element={<UserPage />} />
-            <Route path="/addproduct" element={<AddProductPage />} />
-            <Route path="/addcategory" element={<AddCategoryForm />} />
-            <Route path="/coupon" element={<AddCouponPage />} />
-          {/* </Route> */}
+            <Route path="/addproduct" element={<AddProduct />} />
+            <Route path="/addcategory" element={<AddCategory />} />
+            <Route path="/coupon" element={<AddCoupon />} />
+            <Route path="/addrecipes" element={<AddRecipePage />} />
+          </Route>
 
           {/* Default redirect */}
           <Route path="*" element={<Home />} />

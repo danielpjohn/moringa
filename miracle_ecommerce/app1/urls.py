@@ -1,6 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
-from .views import CartViewSet, dojo_app ,CategoryViewSet, ProductViewSet, get_all_images, products_by_category_name, register_user, send_otp, verify_otp,current_user,user_count
+from .views import CartViewSet, dojo_app ,CategoryViewSet, ProductViewSet, get_all_images, products_by_category_name, register_user, send_otp, verify_otp,current_user,user_count, RecipeViewSet, AboutVideoViewSet, stream_about_video
+
 from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import (
@@ -13,6 +14,8 @@ from django.views.generic import TemplateView
 router = DefaultRouter()
 router.register('categories', CategoryViewSet)
 router.register('products', ProductViewSet)
+router.register('recipes', RecipeViewSet)
+router.register('about-videos', AboutVideoViewSet)
 
 
 cart_list = CartViewSet.as_view({
@@ -51,6 +54,7 @@ urlpatterns = [
     path('cart/<int:pk>/', cart_detail, name='cart-item-detail'),
 
     path('get-all-images/', get_all_images, name='get_all_images'),
+    path('about-videos/<int:pk>/stream/', stream_about_video, name='about_video_stream'),
     path('', include(router.urls)),
 ]
 if settings.DEBUG:
